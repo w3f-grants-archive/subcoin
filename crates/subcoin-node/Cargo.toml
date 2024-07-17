@@ -52,6 +52,8 @@ subcoin-service = { workspace = true }
 substrate-frame-rpc-system = { workspace = true }
 tracing = { workspace = true }
 
+tokio = { workspace = true }
+
 [build-dependencies]
 substrate-build-script-utils = { workspace = true }
 

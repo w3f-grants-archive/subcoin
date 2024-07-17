@@ -123,6 +123,7 @@ impl<B: BlockT> InformantDisplay<B> {
 
         let finalized_hash = info.chain.finalized_hash;
 
+        subcoin_primitives::log_mem_usage("==== Tick");
         tracing::info!(
             target: "subcoin",
             "{level} {}{target} ({} peers), best: #{} ({best_bitcoin_hash},{best_hash}), confirmed #{} ({finalized_bitcoin_hash},{finalized_hash}), {} {}",

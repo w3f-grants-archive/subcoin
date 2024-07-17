@@ -133,7 +133,9 @@ where
     async fn process_event(&mut self, event: Event) {
         match event {
             Event::NewConnection(new_connection) => {
+                subcoin_primitives::log_mem_usage("==== Processing NewConnection");
                 self.peer_manager.on_new_connection(new_connection);
+                subcoin_primitives::log_mem_usage("==== Processed NewConnection");
             }
             Event::OutboundConnectionFailure { peer_addr, reason } => {
                 self.peer_manager
@@ -237,7 +239,9 @@ where
                 Ok(SyncAction::None)
             }
             NetworkMessage::AddrV2(addresses) => {
+                subcoin_primitives::log_mem_usage("==== Processing AddrV2");
                 self.peer_manager.on_addr_v2(from, addresses);
+                subcoin_primitives::log_mem_usage("==== Processed AddrV2");
                 Ok(SyncAction::None)
             }
             NetworkMessage::SendAddrV2 => {

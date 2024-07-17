@@ -385,18 +385,23 @@ where
             disconnect_signal,
         } = new_connection;
 
+        subcoin_primitives::log_mem_usage("[on_new_connection] 0");
+
         // TODO: validate connection
         // ensure max_inbound_peers
         // ensure max_outbound_peers
 
+        subcoin_primitives::log_mem_usage("[on_new_connection] 1");
         let connection = Connection {
             local_addr,
             writer,
             disconnect_signal,
         };
 
+        subcoin_primitives::log_mem_usage("[on_new_connection] 2");
         let mut handshake_state = HandshakeState::ConnectionOpened;
 
+        subcoin_primitives::log_mem_usage("[on_new_connection] 3");
         match direction {
             Direction::Inbound => {}
             Direction::Outbound => {
@@ -442,7 +447,15 @@ where
             }
         }
 
+        subcoin_primitives::log_mem_usage(format!(
+            "Inserting into connections ({} bytes)",
+            std::mem::size_of::<Connection>()
+        ));
         self.connections.insert(peer_addr, connection);
+        subcoin_primitives::log_mem_usage(format!(
+            "Inserting into handshaking_peers ({} bytes)",
+            std::mem::size_of::<HandshakeState>()
+        ));
         self.handshaking_peers.insert(peer_addr, handshake_state);
     }
 

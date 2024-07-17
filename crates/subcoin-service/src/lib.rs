@@ -242,7 +242,11 @@ pub fn new_node(config: SubcoinConfiguration) -> Result<NodeComponents, ServiceE
     // TODO: maintain the native executor on our own since it's deprecated upstream
     let executor = sc_service::new_native_or_wasm_executor(config);
 
-    let backend = sc_service::new_db_backend(config.db_config())?;
+    subcoin_primitives::log_mem_usage("[new_node] Creating db backend");
+    let backend = sc_service::new_db_backend_with_log(config.db_config(), |label: &str|{
+        subcoin_primitives::log_mem_usage(label);
+    })?;
+    subcoin_primitives::log_mem_usage("==== [new_node] DB created");
 
     let genesis_block_builder = GenesisBlockBuilder::<_, _, _, TransactionAdapter>::new(
         bitcoin_network,
@@ -261,6 +265,7 @@ pub fn new_node(config: SubcoinConfiguration) -> Result<NodeComponents, ServiceE
             genesis_block_builder,
             false,
         )?;
+    subcoin_primitives::log_mem_usage("[new_node] Client created");
 
     // Initialize the genesis block hash mapping.
     initialize_genesis_block_hash_mapping(&client, bitcoin_network);
@@ -284,6 +289,7 @@ pub fn new_node(config: SubcoinConfiguration) -> Result<NodeComponents, ServiceE
             None
         },
     );
+    subcoin_primitives::log_mem_usage("[new_node] Block executor created");
 
     let mut telemetry = telemetry.map(|(worker, telemetry)| {
         task_manager
@@ -307,43 +313,47 @@ pub fn new_node(config: SubcoinConfiguration) -> Result<NodeComponents, ServiceE
         ),
     );
 
-    let database_path = config.database.path().map(Path::to_path_buf);
-    let maybe_hwbench = (!no_hardware_benchmarks)
-        .then_some(database_path.as_ref().map(|db_path| {
-            let _ = std::fs::create_dir_all(db_path);
-            sc_sysinfo::gather_hwbench(Some(db_path))
-        }))
-        .flatten();
+    // let database_path = config.database.path().map(Path::to_path_buf);
+    // let maybe_hwbench = (!no_hardware_benchmarks)
+        // .then_some(database_path.as_ref().map(|db_path| {
+            // let _ = std::fs::create_dir_all(db_path);
+            // sc_sysinfo::gather_hwbench(Some(db_path))
+        // }))
+        // .flatten();
 
-    if let Some(hwbench) = maybe_hwbench {
-        sc_sysinfo::print_hwbench(&hwbench);
-        match SUBSTRATE_REFERENCE_HARDWARE.check_hardware(&hwbench) {
-            Err(err) if config.role.is_authority() => {
-                tracing::warn!(
-					"⚠️  The hardware does not meet the minimal requirements {err} for role 'Authority'.",
-				);
-            }
-            _ => {}
-        }
+    // if let Some(hwbench) = maybe_hwbench {
+        // sc_sysinfo::print_hwbench(&hwbench);
+        // match SUBSTRATE_REFERENCE_HARDWARE.check_hardware(&hwbench) {
+            // Err(err) if config.role.is_authority() => {
+                // tracing::warn!(
+					// "⚠️  The hardware does not meet the minimal requirements {err} for role 'Authority'.",
+				// );
+            // }
+            // _ => {}
+        // }
 
-        if let Some(ref mut telemetry) = telemetry {
-            let telemetry_handle = telemetry.handle();
-            task_manager.spawn_handle().spawn(
-                "telemetry_hwbench",
-                None,
-                sc_sysinfo::initialize_hwbench_telemetry(telemetry_handle, hwbench),
-            );
-        }
-    }
+        // if let Some(ref mut telemetry) = telemetry {
+            // let telemetry_handle = telemetry.handle();
+            // task_manager.spawn_handle().spawn(
+                // "telemetry_hwbench",
+                // None,
+                // sc_sysinfo::initialize_hwbench_telemetry(telemetry_handle, hwbench),
+            // );
+        // }
+        // subcoin_primitives::log_mem_usage("==== [new_node] Spawned hwbench");
+    // }
 
-    if let Some(database_path) = database_path {
-        sc_storage_monitor::StorageMonitorService::try_spawn(
-            storage_monitor,
-            database_path,
-            &task_manager.spawn_essential_handle(),
-        )
-        .map_err(|e| ServiceError::Application(e.into()))?;
-    }
+    // if let Some(database_path) = database_path {
+        // sc_storage_monitor::StorageMonitorService::try_spawn(
+            // storage_monitor,
+            // database_path,
+            // &task_manager.spawn_essential_handle(),
+        // )
+        // .map_err(|e| ServiceError::Application(e.into()))?;
+        // subcoin_primitives::log_mem_usage("==== [new_node] Storage monitor spawned");
+    // }
+
+    subcoin_primitives::log_mem_usage("==== [new_node] Node created");
 
     Ok(NodeComponents {
         client,

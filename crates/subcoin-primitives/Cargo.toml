@@ -17,3 +17,5 @@ sp-runtime = { workspace = true }
 # will be inherited from the workspace config, compiling this crate soly may fail.
 subcoin-runtime-primitives = { workspace = true, default-features = true }
 tracing = { workspace = true }
+
+memory-stats = { workspace = true }

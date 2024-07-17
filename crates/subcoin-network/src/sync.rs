@@ -457,22 +457,28 @@ where
     }
 
     pub(super) fn on_block(&mut self, block: BitcoinBlock, from: PeerId) -> SyncAction {
-        match &mut self.syncing {
+        subcoin_primitives::log_mem_usage("==== [on_block] Enter");
+        let res = match &mut self.syncing {
             Syncing::Idle => SyncAction::None,
             Syncing::BlocksFirstSync(downloader) => downloader.on_block(block, from),
             Syncing::HeadersFirstSync(downloader) => downloader.on_block(block, from),
-        }
+        };
+        subcoin_primitives::log_mem_usage("==== [on_block] Exit");
+        res
     }
 
     pub(super) fn on_headers(&mut self, headers: Vec<BitcoinHeader>, from: PeerId) -> SyncAction {
-        match &mut self.syncing {
+        subcoin_primitives::log_mem_usage("==== [on_headers] Enter");
+        let res = match &mut self.syncing {
             Syncing::HeadersFirstSync(downloader) => downloader.on_headers(headers, from),
             Syncing::BlocksFirstSync(_) => SyncAction::None,
             Syncing::Idle => {
                 // TODO: A new block maybe broadcasted via `headers` message.
                 SyncAction::None
             }
-        }
+        };
+        subcoin_primitives::log_mem_usage("==== [on_headers] Exit");
+        res
     }
 
     pub(super) fn on_blocks_processed(&mut self, results: ImportManyBlocksResult) {

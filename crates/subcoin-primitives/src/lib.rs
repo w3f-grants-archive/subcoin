@@ -17,6 +17,27 @@ pub use subcoin_runtime_primitives as runtime;
 
 type Height = u32;
 
+pub fn mem_usage() -> String {
+    if let Some(usage) = memory_stats::memory_stats() {
+        let physical_mem = usage.physical_mem as f64 / 1024.0 / 1024.0;
+        let virtual_mem = usage.virtual_mem as f64 / 1024.0 / 1024.0;
+
+        if physical_mem > 1024.0 {
+            let physical_mem = physical_mem / 1024.0;
+            let virtual_mem = virtual_mem / 1024.0;
+            format!("p: {:.2}GB, v: {:.2}GB", physical_mem, virtual_mem)
+        } else {
+            format!("p: {:.2}MB, v: {:.2}MB", physical_mem, virtual_mem)
+        }
+    } else {
+        "Unknown Usage".to_string()
+    }
+}
+
+pub fn log_mem_usage(label: impl AsRef<str>) {
+    tracing::warn!("{}", format!("{} {}", label.as_ref(), mem_usage()));
+}
+
 /// Returns the encoded Bitcoin genesis block.
 ///
 /// Used in the Substrate genesis block construction.
